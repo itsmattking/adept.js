@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>Adept.js Tests</title>
+    <style type="text/css">
+      div.hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+    </div>
+    <script type="text/template" id="test-content">
+      <h1>Headline 1</h1>
+      <article id="article-1" title="Article 1">
+        <h3 data-id="one" class="headline">Headline 1</h3>
+        <p><span>Lorem ipsum dolor sit amet</span>, consectetuer adipiscing elit. Donec hendrerit tempor tellus. Donec pretium posuere tellus. Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla posuere. Donec vitae dolor. Nullam tristique diam non turpis. Cras placerat accumsan nulla. Nullam rutrum. Nam vestibulum accumsan nisl.</p>
+      </article>
+      <article id="article-2">
+        <h3 data-id="two" class="headline">Headline 2</h3>
+        <p><span style="display: inline-block">Lorem ipsum dolor sit amet</span>, consectetuer adipiscing elit. Donec hendrerit tempor tellus. Donec pretium posuere tellus. Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla posuere. Donec vitae dolor. Nullam tristique diam non turpis. Cras placerat accumsan nulla. Nullam rutrum. Nam vestibulum accumsan nisl.</p>
+      </article>
+      <article id="article-3">
+        <h3 data-id="three" class="headline">Headline 3</h3>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec hendrerit tempor tellus. Donec pretium posuere tellus. Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla posuere. Donec vitae dolor. Nullam tristique diam non turpis. Cras placerat accumsan nulla. Nullam rutrum. Nam vestibulum accumsan nisl.</p>
+      </article>
+      <div class="hidden">
+        <p>Hidden Content</p>
+      </div>
+      <form>
+        <input type="text" name="name" value="Default Value">
+      </form>
+    </script>
+    <script src="../adept.js"></script>
+    <script src="test.js"></script>
+  </body>
+</html>

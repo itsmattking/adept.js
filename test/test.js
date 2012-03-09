@@ -249,6 +249,17 @@
     }).length === 3;
   });
 
+  test('Should get inline css style', function() {
+    $('#container article h3').css({color: '#F00'});
+    var result = $('#container article h3').css('color');
+    return result === 'rgb(255, 0, 0)' || result === '#F00';
+  });
+
+  test('Should get precomputed css style', function() {
+    var result = $('#container h1').css('fontSize');
+    return result === '48px';
+  });
+
   test('Should not add vendor prefixes to css declarations', function() {
     var results = $('#container article h3');
     results.css({ color: '#FFF' });

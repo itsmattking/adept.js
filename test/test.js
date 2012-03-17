@@ -44,6 +44,24 @@
     teardown();
   }
 
+  function testAsync(name, fn) {
+    setup();
+    time(name);
+    fn.call(fn, function(pass) {
+      try {
+        var timeSpent = timeEnd(name);
+        if (pass) {
+          log(name, 'log', 'PASS', timeSpent);
+        } else {
+          log(name, 'warn', 'FAIL', timeSpent);
+        }
+      } catch(e) {
+        log(name, 'error', 'ERROR (Reason: ' + e + ')', timeSpent || 'N/A');
+      }
+      teardown();
+    });
+  }
+
   test('Should accept string as selector and return Set', function() {
     var results = $('#container');
     return (results instanceof $.Set &&
@@ -392,6 +410,31 @@
   test('Should get input form value', function() {
     var expected = document.querySelector('form input[name=name]').value;
     return $('form input[name=name]').val() === 'Default Value';
+  });
+
+  testAsync('Should run callback after 1 second transition', function(callback) {
+    var time = new Date().getTime();
+    $('#article-1 h3').transition({paddingLeft: '10px'}, {duration: '1s'}, function() {
+      var passed = true;
+      if ((new Date().getTime()) - time < 1000) {
+        passed = false;
+      }
+      callback(passed);
+    });
+  });
+
+  testAsync('Should be red after transition', function(callback) {
+    test('Should not be red before transition', function() {
+      var color = $('#article-1 h3').css('color');
+      return color === 'rgb(0, 0, 0)' || color === '#000';
+    });
+    $('#article-1 h3').transition({color: '#F00'}, {duration: '1s'}, function() {
+      var passed = true;
+      if (!($(this).css('color') === 'rgb(255, 0, 0)' || $(this).css('color') === '#F00')) {
+        passed = false;
+      }
+      callback(passed);
+    });
   });
 
 })(window, document);

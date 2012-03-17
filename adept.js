@@ -309,13 +309,13 @@
 
   Set.prototype.transitionEnd = function(fn)  {
     var prefixes = this.vendorPrefixes;
+    var transitionEnd = function() {
+      fn.call(this);
+      for (var k in prefixes) {
+        this.removeEventListener(k + 'TransitionEnd', transitionEnd, false);
+      }
+    };
     this['each'](function(s) {
-      var transitionEnd = function() {
-        fn.call(this);
-        for (var k in prefixes) {
-          this.removeEventListener(k + 'TransitionEnd', transitionEnd, false);
-        }
-      };
       for (var k in prefixes) {
         s.addEventListener(k + 'TransitionEnd', transitionEnd, false);
       }

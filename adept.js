@@ -251,9 +251,20 @@
   };
 
   Set.prototype.modifyClass = function(className, type) {
-    this.list.map(function(s) {
-      s['classList'][type](className);
-    });
+    if (typeof className !== 'undefined') {
+      className = className.split(' ');
+      this.list.map(function(s) {
+        className.map(function(name) {
+          s['classList'][type](name);
+        });
+      });
+    } else if (type === 'remove') {
+      this.list.map(function(s) {
+        while(s['classList'].length) {
+          s['classList'].remove(s['classList'][0]);
+        }
+      });
+    }
     return this;
   };
 
@@ -267,6 +278,11 @@
 
   Set.prototype['toggleClass'] = function(className) {
     return this.modifyClass(className, 'toggle');
+  };
+
+  Set.prototype['replaceClass'] = function(className) {
+    this['removeClass']();
+    return this['addClass'](className, 'add');
   };
 
   /**
@@ -322,25 +338,27 @@
     }, this);
   };
 
-  window['$'] = function(selector, root) {
+  function $(selector, root) {
     if (selector instanceof Set) {
       return selector;
     }
-    if (selector instanceof NodeList) {
+    if (selector instanceof window['NodeList']) {
       return new Set(selector);
     }
-    if (selector instanceof HTMLElement) {
+    if (selector === document ||
+        selector instanceof window['HTMLElement']) {
       return new Set([selector]);
     }
-    if (selector instanceof Object &&
+    if (selector instanceof window['Object'] &&
         typeof selector.length !== 'undefined') {
       return new Set(Set.prototype['slice'].call(selector, 0));
     }
 
     root = root || document;
     return new Set(root.querySelectorAll(selector));
-  };
+  }
 
-  window['$']['Set'] = Set;
+  $['Set'] = Set;
+  window['$'] = $;
 
 })(document, window);

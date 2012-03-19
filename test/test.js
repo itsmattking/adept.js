@@ -200,7 +200,7 @@
   });
 
   runner.test('Should set basic css styles', function() {
-    return $('#container article h3').css({color: '#F00', borderBottom: '2px solid #CCC'})
+    return $('#container article h3').style({color: '#F00', borderBottom: '2px solid #CCC'})
     .filter(function(h) {
       return (h.style.color === 'rgb(255, 0, 0)' || h.style.color === '#F00')
             && (h.style.borderBottom === '2px solid rgb(204, 204, 204)' || h.style.borderBottom === '2px solid #CCC');
@@ -208,19 +208,19 @@
   });
 
   runner.test('Should get inline css style', function() {
-    $('#container article h3').css({color: '#F00'});
-    var result = $('#container article h3').css('color');
+    $('#container article h3').style({color: '#F00'});
+    var result = $('#container article h3').style('color');
     return result === 'rgb(255, 0, 0)' || result === '#F00';
   });
 
   runner.test('Should get precomputed css style', function() {
-    var result = $('#container h1').css('fontSize');
+    var result = $('#container h1').style('fontSize');
     return result === '48px';
   });
 
   runner.test('Should not add vendor prefixes to css declarations', function() {
     var results = $('#container article h3');
-    results.css({ color: '#FFF' });
+    results.style({ color: '#FFF' });
     return results.filter(function(item) {
       return (typeof item.style.MozColor === 'undefined') &&
         (typeof item.style.webkitColor === 'undefined') &&
@@ -232,7 +232,7 @@
 
   runner.test('Should add vendor prefixes to css declarations', function() {
     var results = $('#container article h3');
-    results.css({ transform: 'scale(1.5)' });
+    results.style({ transform: 'scale(1.5)' });
     return results.filter(function(item) {
       return item.style.MozTransform === 'scale(1.5)' &&
         item.style.webkitTransform === 'scale(1.5)' &&
@@ -416,18 +416,56 @@
   }, true);
 
   runner.test('Should not be red before transition', function() {
-    var color = $('#article-1 h3').css('color');
+    var color = $('#article-1 h3').style('color');
     return color === 'rgb(0, 0, 0)' || color === '#000';
   });
 
   runner.test('Should be red after transition', function(next) {
     $('#article-1 h3').transition({color: '#F00'}, {duration: '1s'}, function() {
       var passed = true;
-      if (!($(this).css('color') === 'rgb(255, 0, 0)' || $(this).css('color') === '#F00')) {
+      if (!($(this).style('color') === 'rgb(255, 0, 0)' || $(this).style('color') === '#F00')) {
         passed = false;
       }
       next(passed);
     });
   }, true);
+
+  runner.test('Should add vendor transitionEnd event using addListener', function(next) {
+    $('#article-1 h3').addListener('transitionEnd', function() {
+      next(true);
+    });
+    $('#article-1 h3').transition({color: '#F00'}, {duration: '1.0s'});
+  }, true);
+
+  runner.test('Should add click event listener', function(next) {
+    var passed = false;
+    $('#article-1 h3').addListener('click', function() {
+      passed = true;
+    });
+    var e = new Event('click', true, true);
+    $('#article-1 h3').raw(0).dispatchEvent(e);
+    return passed;
+  });
+
+  runner.test('Should remove click event listener', function() {
+    var bool = false;
+
+    var setTrue = function() {
+      bool = true;
+    };
+
+    var e = new Event('click', true, true);
+    $('#article-1 h3').addListener('click', setTrue);
+    $('#article-1 h3').raw(0).dispatchEvent(e);
+
+    if (bool) {
+      bool = false;
+      $('#article-1 h3').removeListener('click', setTrue);
+      $('#article-1 h3').raw(0).dispatchEvent(e);
+      return bool === false;
+    } else {
+      return false;
+    }
+  });
 
 })(window, document, runner);

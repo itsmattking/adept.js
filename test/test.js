@@ -406,7 +406,7 @@
 
   runner.test('Should run callback after 1 second transition', function(next) {
     var time = new Date().getTime();
-    $('#article-1 h3').transition({paddingLeft: '10px'}, {duration: '1s'}, function() {
+    $('#article-1 h3').transition({color: '#F00'}, {duration: '1s'}, function() {
       var passed = true;
       if ((new Date().getTime()) - time < 1000) {
         passed = false;
@@ -442,7 +442,9 @@
     $('#article-1 h3').addListener('click', function() {
       passed = true;
     });
-    var e = new Event('click', true, true);
+
+    var e = document.createEvent('MouseEvents');
+    e.initEvent('click', true, true);
     $('#article-1 h3').raw(0).dispatchEvent(e);
     return passed;
   });
@@ -454,7 +456,8 @@
       bool = true;
     };
 
-    var e = new Event('click', true, true);
+    var e = document.createEvent('MouseEvents');
+    e.initEvent('click', true, true);
     $('#article-1 h3').addListener('click', setTrue);
     $('#article-1 h3').raw(0).dispatchEvent(e);
 

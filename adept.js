@@ -310,7 +310,7 @@
 
 
   Set.prototype.vendorEvents = {
-    'transitionEnd': {
+    transitionEnd: {
       'oTransitionEnd': 1,
       'webkitTransitionEnd': 1,
       'transitionend': 1
@@ -323,15 +323,11 @@
 
   Set.prototype.manageListener = function(type, fn, capture, listenerType) {
     capture = typeof capture === 'undefined' ? false : capture;
-    var evs = {};
-    if (type in this.vendorEvents) {
-      evs[type] = this.vendorEvents[type];
+    if (type === 'transitionEnd') {
+      this.transitionEnd(fn);
     } else {
-      evs[type] = 1;
-    }
-    for (var k in evs) {
       this.each(function(s) {
-        s[listenerType + 'EventListener'](k, fn, capture);
+        s[listenerType + 'EventListener'](type, fn, capture);
       });
     }
     return this;
@@ -351,29 +347,35 @@
 
   Set.prototype.transition = function(dec, options, callback)  {
     for (var k in options) {
-      var vendorProp = 'transition' + k.substr(0, 1).toUpperCase() + k.substr(1);
-      if (vendorProp in this.vendorProps) {
-        dec[vendorProp] = options[k];
+      var vendorProp = k.substr(0, 1).toUpperCase() + k.substr(1);
+      if (('transition' + vendorProp) in this.vendorProps) {
+        for (var prefix in this.vendorPrefixes) {
+          dec[prefix + 'Transition' + vendorProp] = options[k];
+        }
       }
     }
     if (callback) {
       this.transitionEnd(callback);
     }
-    this.style(dec);
+    setTimeout(function(self, dec) {
+      return function() {
+        self.style(dec);
+      };
+    }(this, dec), 10);
     return this;
   };
 
   Set.prototype.transitionEnd = function(fn)  {
-    var prefixes = this.vendorPrefixes;
-    var transitionEnd = function() {
-      fn.call(this);
-      for (var k in prefixes) {
-        this.removeEventListener(k + 'TransitionEnd', transitionEnd, false);
+    var events = this.vendorEvents.transitionEnd;
+    var transitionEnd = function(e) {
+      fn.call(this, e);
+      for (var k in events) {
+        this.removeEventListener(k, transitionEnd, false);
       }
     };
     this.each(function(s) {
-      for (var k in prefixes) {
-        s.addEventListener(k + 'TransitionEnd', transitionEnd, false);
+      for (var k in events) {
+        s.addEventListener(k, transitionEnd, false);
       }
     }, this);
   };

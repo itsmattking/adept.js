@@ -3,16 +3,17 @@ var runner = (function(window, $) {
   var template = document.getElementById('test-content').textContent;
   var container = document.getElementById('container');
 
-  var timer,
+  var timers = {},
     queue = [],
-    running = false;
+    running = false,
+    queueCount = 0;
 
   function time(name) {
-    timer = new Date().getTime();
+    timers[name] = new Date().getTime();
   }
 
   function timeEnd(name) {
-    return (new Date().getTime() - timer) + 'ms';
+    return (new Date().getTime() - timers[name]) + 'ms';
   }
 
   function log(name, type, status, time) {
@@ -25,12 +26,17 @@ var runner = (function(window, $) {
 
   function teardown() {
     container.innerHTML = template;
-    timer = null;
+    timers[name] = null;
+  }
+
+  function addToQueue(fn) {
+    queue.push(fn);
+    queueCount++;
   }
 
   function test(name, fn, async) {
     async = async || false;
-    queue.push(function(name, fn) {
+    addToQueue(function(name, fn) {
       return function() {
         setup();
         time(name);

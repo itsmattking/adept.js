@@ -431,10 +431,23 @@
   }, true);
 
   runner.test('Should add vendor transitionEnd event using addListener', function(next) {
-    $('#article-1 h3').addListener('transitionEnd', function() {
+    var runNext = function() {
+      next(true);
+    };
+    $('#article-1 h3').addListener('transitionEnd', runNext, true);
+    $('#article-1 h3').transition({color: '#F00'}, {property: 'color', duration: '1.0s'});
+  }, true);
+
+  runner.test('Should remove vendor transitionEnd event using removeListener', function(next) {
+    var fail = function(e) {
+      throw new Error('fail');
+    };
+
+    $('#article-1 h3').addListener('transitionEnd', fail);
+    $('#article-1 h3').removeListener('transitionEnd', fail);
+    $('#article-1 h3').transition({color: '#F00'}, {property: 'color', duration: '1.0s'}, function() {
       next(true);
     });
-    $('#article-1 h3').transition({color: '#F00'}, {duration: '1.0s'});
   }, true);
 
   runner.test('Should add click event listener', function(next) {

@@ -308,9 +308,8 @@
     return this.addClass(className);
   };
 
-
   Set.prototype.vendorEvents = {
-    transitionEnd: {
+    'transitionEnd': {
       'oTransitionEnd': 1,
       'webkitTransitionEnd': 1,
       'transitionend': 1
@@ -323,8 +322,12 @@
 
   Set.prototype.manageListener = function(type, fn, capture, listenerType) {
     capture = typeof capture === 'undefined' ? false : capture;
-    if (type === 'transitionEnd') {
-      this.transitionEnd(fn);
+    if (type in this.vendorEvents) {
+      this.each(function(s) {
+        for (var k in this.vendorEvents[type]) {
+          s[listenerType + 'EventListener'](k, fn, capture);
+        }
+      }, this);
     } else {
       this.each(function(s) {
         s[listenerType + 'EventListener'](type, fn, capture);
@@ -334,11 +337,11 @@
   };
 
   Set.prototype.addListener = function(type, fn, capture) {
-    this.manageListener(type, fn, capture, 'add');
+    return this.manageListener(type, fn, capture, 'add');
   };
 
   Set.prototype.removeListener = function(type, fn, capture) {
-    this.manageListener(type, fn, capture, 'remove');
+    return this.manageListener(type, fn, capture, 'remove');
   };
 
   /**

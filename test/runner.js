@@ -5,8 +5,7 @@ var runner = (function(window, $) {
 
   var timers = {},
     queue = [],
-    running = false,
-    queueCount = 0;
+    running = false;
 
   function time(name) {
     timers[name] = new Date().getTime();
@@ -20,7 +19,18 @@ var runner = (function(window, $) {
     console[type](status + ' (' + time + '): ' + name);
   }
 
+  function empty(parent) {
+    if (parent.childNodes.length > 0) {
+      while (parent.childNodes.length > 0) {
+        parent.removeChild(parent.childNodes[0]);
+      }
+    }
+  }
+
   function setup() {
+    while (container.childNodes.length > 0) {
+      empty(container);
+    }
     container.innerHTML = template;
   }
 
@@ -29,14 +39,9 @@ var runner = (function(window, $) {
     timers[name] = null;
   }
 
-  function addToQueue(fn) {
-    queue.push(fn);
-    queueCount++;
-  }
-
   function test(name, fn, async) {
     async = async || false;
-    addToQueue(function(name, fn) {
+    queue.push(function(name, fn) {
       return function() {
         setup();
         time(name);

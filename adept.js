@@ -1,5 +1,98 @@
 (function(document, window) {
 
+  var CanvasContext = (function() {
+
+    var canvas = document.createElement('canvas');
+    if (!canvas || typeof canvas.getContext !== 'function') {
+      return null;
+    }
+
+    /**
+     * Wrapper around a canvas context to allow chaining of functions.
+     * @constructor
+     */
+    function CanvasContext(list) {
+      this.list = list.map(function(l) {
+        if (typeof l.getContext === 'function') {
+          l.ctx = l.getContext('2d');
+          return l;
+        } else {
+          return null;
+        }
+      }).filter(function(l) { return l !== null; });
+    }
+
+    CanvasContext.prototype.validSetters = {};
+
+    var ctx = canvas.getContext('2d');
+
+    for (var k in ctx) {
+      if (!(k in CanvasContext.prototype) && typeof ctx[k] === 'function') {
+        (function(fn) {
+          CanvasContext.prototype[fn] = function() {
+            var args = Set.prototype.slice.call(arguments, 0);
+            this.list.forEach(function(l) {
+              l.ctx[fn].apply(l.ctx, args);
+            }, this);
+            return this;
+          };
+        }(k));
+      } else {
+        CanvasContext.prototype.validSetters[k] = 1;
+      }
+    }
+
+    CanvasContext.prototype.set = function(options) {
+      options = options || {};
+      for (var k in options) {
+        if (!(k in this.validSetters)) {
+          delete options[k];
+        }
+      }
+      this.list.forEach(function(l) {
+        for (var k in options) {
+          l.ctx[k] = options[k];
+        }
+      });
+      return this;
+    };
+
+    CanvasContext.prototype.settings = function(i) {
+      var list = (typeof i === 'undefined' ? this.list : [this.list[i]]);
+      var results = list.map(function(l) {
+        var out = {};
+        for (var k in this.validSetters) {
+          out[k] = l.ctx[k];
+        }
+        return out;
+      }, this);
+      return results.length === 1 ? results[0] : results;
+    };
+
+    CanvasContext.prototype.raw = function(i) {
+      return this.list[i] || this.list;
+    };
+
+    CanvasContext.prototype.toDataURL = function() {
+      var args = Set.prototype.slice.call(arguments, 0);
+      var results = this.list.map(function(c) {
+        return c.toDataURL.call(c, args);
+      });
+      return results.length === 1 ? results[0] : results;
+    };
+
+    CanvasContext.prototype.toBlob = function() {
+      var args = Set.prototype.slice.call(arguments, 0);
+      var results = this.list.map(function(c) {
+        return c.toBlob.call(c, args);
+      });
+      return results.length === 1 ? results[0] : results;
+    };
+
+    return CanvasContext;
+
+  })();
+
   /**
    * @constructor
    */
@@ -369,7 +462,7 @@
   };
 
   Set.prototype.transitionEnd = function(fn)  {
-    var events = this.vendorEvents.transitionEnd;
+    var events = this.vendorEvents['transitionEnd'];
     var transitionEnd = function(e) {
       fn.call(this, e);
       for (var k in events) {
@@ -381,6 +474,13 @@
         s.addEventListener(k, transitionEnd, false);
       }
     }, this);
+  };
+
+  /**
+   * Canvas chainable context functions.
+   */
+  Set.prototype.context = function() {
+    return new CanvasContext(this.list);
   };
 
   function $(selector, root) {
@@ -431,6 +531,13 @@
   $['Set'].prototype['addListener'] = Set.prototype.addListener;
   $['Set'].prototype['removeListener'] = Set.prototype.removeListener;
   $['Set'].prototype['transition'] = Set.prototype.transition;
+  $['Set'].prototype['context'] = Set.prototype.context;
+
+  $['CanvasContext'] = CanvasContext;
+  $['CanvasContext'].prototype['set'] = CanvasContext.prototype.set;
+  $['CanvasContext'].prototype['settings'] = CanvasContext.prototype.settings;
+  $['CanvasContext'].prototype['toDataURL'] = CanvasContext.prototype.toDataURL;
+  $['CanvasContext'].prototype['toBlob'] = CanvasContext.prototype.toBlob;
 
   window['$'] = $;
 

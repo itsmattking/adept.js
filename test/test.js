@@ -484,4 +484,77 @@
     }
   });
 
+  runner.test('Should return canvas context object', function() {
+    return $('#canvas-test').context() instanceof $.CanvasContext;
+  });
+
+  runner.test('Should have all canvas context functions on canvas context', function() {
+    var ctx = document.getElementById('test-canvas-a').getContext('2d');
+    var contextObject = $('#canvas-test').context();
+    var passed = true;
+    for (var k in ctx) {
+      if (typeof ctx[k] === 'function' &&
+          typeof contextObject[k] !== 'function') {
+        passed = false;
+      };
+    }
+    return passed;
+  });
+
+  runner.test('Should set context options', function() {
+    var ctx = $('#test-canvas-a').context();
+    var defaultFillStyle = document.getElementById('test-canvas-a').getContext('2d').fillStyle;
+    return ctx.settings(0).fillStyle === defaultFillStyle &&
+      ctx.set({fillStyle: '#F00'}) && ctx.settings(0).fillStyle === '#ff0000';
+  });
+
+  runner.test('Should not set invalid context options', function() {
+    var ctx = $('#test-canvas-a').context();
+    ctx.set({fillStyle: '#F00', invalidSetting: true});
+    return ctx.settings(0).fillStyle === '#ff0000' && typeof ctx.settings(0).invalidSetting === 'undefined';
+  });
+
+  runner.test('Should get context option settings', function() {
+    var ctx = $('#test-canvas-a').context();
+    ctx.set({fillStyle: '#F00', lineWidth: 100});
+    return ctx.settings(0).fillStyle === '#ff0000' && ctx.settings(0).lineWidth === 100;
+  });
+
+  runner.test('Should set multiple context option settings', function() {
+    var ctx = $('canvas').context();
+    ctx.set({fillStyle: '#F00', lineWidth: 100});
+    return ctx.settings(0).fillStyle === '#ff0000' && ctx.settings(0).lineWidth === 100 &&
+      ctx.settings(1).fillStyle === '#ff0000' && ctx.settings(1).lineWidth === 100;
+  });
+
+  runner.test('Should get all context option settings', function() {
+    var settings = $('canvas').context().set({fillStyle: '#F00', lineWidth: 100}).settings();
+    return settings[0].fillStyle === '#ff0000' && settings[0].lineWidth === 100 &&
+      settings[1].fillStyle === '#ff0000' && settings[1].lineWidth === 100;
+  });
+
+  runner.test('Should draw on canvas with chained commands', function() {
+    var raw = document.getElementById('test-canvas-a');
+    var rawCtx = raw.getContext('2d');
+    var ctx = $('#test-canvas-b').context();
+    rawCtx.fillStyle = '#F00';
+    rawCtx.save();
+    rawCtx.fillRect(0, 0, 100, 100);
+    rawCtx.restore();
+    ctx.set({fillStyle: '#F00'}).save().fillRect(0, 0, 100, 100).restore();
+    return raw.toDataURL() === $('#test-canvas-b').context().toDataURL();
+  });
+
+  runner.test('Should fail on mismatched draw on canvas with chained commands', function() {
+    var raw = document.getElementById('test-canvas-a');
+    var rawCtx = raw.getContext('2d');
+    var ctx = $('#test-canvas-b').context();
+    rawCtx.fillStyle = '#F00';
+    rawCtx.save();
+    rawCtx.fillRect(0, 0, 50, 100);
+    rawCtx.restore();
+    ctx.set({fillStyle: '#F00'}).save().fillRect(0, 0, 100, 100).restore();
+    return raw.toDataURL() !== $('#test-canvas-b').context().toDataURL();
+  });
+
 })(window, document, runner);

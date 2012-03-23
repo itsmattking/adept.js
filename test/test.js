@@ -557,4 +557,18 @@
     return raw.toDataURL() !== $('#test-canvas-b').context().toDataURL();
   });
 
+  runner.test('Should allow shim functions', function() {
+    var passed = true;
+    var results = $('#container article');
+
+    $.shim('each', function(fn, ctx) {
+      return 'shimmed';
+    });
+    var shimmedResults = $('#container article').each(function(item) {
+      console.log(item);
+    });
+
+    return (results instanceof $.Set) && shimmedResults === 'shimmed';
+  });
+
 })(window, document, runner);

@@ -483,6 +483,13 @@
     return new CanvasContext(this.list);
   };
 
+  function shim(name, fn) {
+    if (name in Set.prototype) {
+      Set.prototype[name] = fn;
+      $['Set'].prototype[name] = Set.prototype[name];
+    }
+  }
+
   function $(selector, root) {
     if (selector instanceof Set) {
       return selector;
@@ -538,6 +545,8 @@
   $['CanvasContext'].prototype['settings'] = CanvasContext.prototype.settings;
   $['CanvasContext'].prototype['toDataURL'] = CanvasContext.prototype.toDataURL;
   $['CanvasContext'].prototype['toBlob'] = CanvasContext.prototype.toBlob;
+
+  $['shim'] = shim;
 
   window['$'] = $;
 

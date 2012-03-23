@@ -75,8 +75,7 @@ All context and canvas operations are supported:
 
     $('#container canvas').context().save().set({fillStyle: 'red'}).fillRect(0, 0, 100, 100).restore().toDataURL();
 
-Core Features
--------------
+### Core Features
 
 * Chainable syntax (yes, like jQuery)
 * Query selector engine solely based on querySelectorAll
@@ -89,15 +88,13 @@ Core Features
 * Class name modification using built-in classList
 * Content insert, remove, append/prepend
 
-Interesting Features
---------------------
+### Interesting Features
 
 * Normalizes applying CSS transitions with vendor prefixes.
 * Normalizes application of transitionEnd events with vendor prefixes.
 * A chainable context object for drawing on canvas elements.
 
-Unfeatures
-----------
+### Unfeatures
 
 * No AJAX
 * No JSON parsing (that's built into modern browsers now)
@@ -108,10 +105,9 @@ Unfeatures
   do, I recommend Modernizr)
 
 For the Caremad People
-======================
+----------------------
 
-Q: Why did you write this? Why would I use this instead of jQuery??
--------------------------------------------------------------------
+### Q: Why did you write this? Why would I use this instead of jQuery??
 
 A: I wrote this for a couple reasons. First, I figured there would be
 a lot to learn when writing a library like this. So I did, and I learned
@@ -120,8 +116,7 @@ if you are working on projects that don't require support for older browsers,
 this might be a good alternative, as it's goal is to be close to the metal,
 small, and fast.
 
-Q: But if you write a library you have to include support for older browsers!
------------------------------------------------------------------------------
+### Q: But if you write a library you have to include support for older browsers!
 
 A: Alright fine. There is a shim API that will allow anyone to
 override built in functions. With this you can possibly add support
@@ -129,25 +124,22 @@ for older browsers. If you REALLY wanted to. But you're on your own
 at that point. But if you do write one, feel free to send me a link to it
 and I'll make sure it gets included in a list of shims.
 
-Q: I can't believe you didn't include {feature name}?
----------------------------------------------------
+### Q: I can't believe you didn't include {feature name}?
 
 Well if a feature doesn't exist either I haven't had a use for it yet or
 I don't think it belongs in there. If you have an idea for a
 feature, please do fork and submit a pull request, or open a new issue.
 
-Q: Why did you use querySelectorAll? It sucks!
-----------------------------------------------
+### Q: Why did you use querySelectorAll? It sucks!
 
 A: Sure, there are some bugs, but overall querySelectorAll functions and is
 performant for 99% of what I see people using this library for. And it's
 built right into the browser.
 
 Browser Compatibility
-=====================
+---------------------
 
-Definitely Compatible Browsers
-------------------------------
+### Definitely Compatible Browsers
 
 Has been tested to run in, and will continue to be full support for:
 
@@ -156,8 +148,7 @@ Has been tested to run in, and will continue to be full support for:
 * Safari 5.x or higher on Mac OS X
 * Safari on iOS 5 or higher
 
-Might-Be-Compatible Browsers
-----------------------------
+### Might-Be-Compatible Browsers
 
 Will be testing to work in, but may not necessarily be 100% compatible with:
 
@@ -167,8 +158,7 @@ Will be testing to work in, but may not necessarily be 100% compatible with:
 * Internet Explorer 9 or 10
 * Opera 11.x
 
-Definitely-Not-Compatible Browsers
-----------------------------------
+### Definitely-Not-Compatible Browsers
 
 Very small chance there will be compatibility now or any time in the future in:
 

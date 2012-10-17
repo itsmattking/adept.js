@@ -109,6 +109,9 @@
   function Set(list) {
     this.list = this.slice.call(list, 0);
     this.length = this.list.length;
+    this.returnRaw = false;
+    this.fn = undefined;
+    this.ctx = undefined;
     return this;
   }
 
@@ -121,12 +124,28 @@
    */
   Set.prototype.each = function(fn, ctx) {
     ctx = ctx || fn;
-    this.list.forEach(fn, ctx);
+    if (this.returnRaw) {
+      this.list.forEach(fn, ctx);
+    } else {
+      this.fn = fn;
+      this.ctx = ctx;
+      this.list.forEach(this.applyItem, this);
+      this.fn = this.ctx = undefined;
+    }
     return this;
   };
 
   Set.prototype.filter = function(fn, ctx) {
-    return new Set(this.list.filter(fn, ctx));
+    ctx = ctx || fn;
+    if (this.returnRaw) {
+      return new Set(this.list.filter(fn, ctx));
+    } else {
+      this.fn = fn;
+      this.ctx = ctx;
+      var out = new Set(this.list.filter(this.applyItem, this));
+      this.fn = this.ctx = undefined;
+      return out;
+    }
   };
 
   Set.prototype.find = function(selector) {
@@ -136,8 +155,20 @@
   };
 
   Set.prototype.map = function(fn, ctx) {
-    this.list.map(fn, ctx);
+    ctx = ctx || fn;
+    if (this.returnRaw) {
+      this.list.map(fn, ctx);
+    } else {
+      this.fn = fn;
+      this.ctx = ctx;
+      this.list.map(this.applyItem, this);
+      this.fn = this.ctx = undefined;
+    }
     return this;
+  };
+
+  Set.prototype.applyItem = function(item) {
+    this.fn.call(this.ctx, new Set([item]));
   };
 
   Set.prototype.parent = function(selector) {
@@ -158,14 +189,21 @@
 
   Set.prototype.get = function(i) {
     if (typeof i !== CONS.UNDEFINED) {
-      return new Set([this.list[i]]);
+      if (this.returnRaw) {
+        return this.list[i];
+      } else {
+        return new Set([this.list[i]]);
+      }
+    } else if (this.returnRaw) {
+      return this.list;
     } else {
       return this;
     }
   };
 
-  Set.prototype.raw = function(i) {
-    return this.list[i] || this.list;
+  Set.prototype.raw = function() {
+    this.returnRaw = true;
+    return this;
   };
 
   /**
@@ -178,7 +216,7 @@
       });
       return firstOrList(results);
     } else if (name && val) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.setAttribute(name, val);
       });
     }
@@ -192,7 +230,7 @@
       });
       return firstOrList(results);
     } else if (name && val) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.dataset[name] = val;
       });
     } else if (!(name && val)) {
@@ -213,7 +251,7 @@
    */
   Set.prototype.val = function(val) {
     if (val) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.value = val;
       });
       return this;
@@ -235,7 +273,7 @@
       });
       return firstOrList(out);
     } else {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s[type] = content;
       });
     }
@@ -253,16 +291,16 @@
   Set.prototype.prepend = function(content) {
     if (content instanceof Set) {
       var c = content.content(undefined, 'outerHTML');
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.innerHTML = c + s.innerHTML;
       });
     } else if (content instanceof HTMLElement) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         var c = content.cloneNode(true);
         s.parentNode.insertBefore(s.parentNode.childNodes[0], c);
       });
     } else {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.innerHTML = content + s.innerHTML;
       });
     }
@@ -271,15 +309,15 @@
 
   Set.prototype.append = function(content) {
     if (content instanceof Set) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.innerHTML += content.content(undefined, 'outerHTML');
       });
     } else if (content instanceof HTMLElement) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.appendChild(content.cloneNode(true));
       });
     } else {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s.innerHTML += content;
       });
     }
@@ -287,7 +325,7 @@
   };
 
   Set.prototype.remove = function() {
-    this.each(function(s) {
+    this.raw().each(function(s) {
       s.parentNode.removeChild(s);
     });
     return this;
@@ -339,7 +377,7 @@
     if (typeof dec === 'string') {
       return window.getComputedStyle(this.list[0])[dec];
     } else {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         for (var k in dec) {
           this.setStyle(s, k, dec[k]);
         }
@@ -349,7 +387,7 @@
   };
 
   Set.prototype.hide = function() {
-    this.each(function(s) {
+    this.raw().each(function(s) {
       var originalDisplay = window.getComputedStyle(s).display;
       if (originalDisplay !== 'none') {
         s.originalDisplay = originalDisplay;
@@ -360,7 +398,7 @@
   };
 
   Set.prototype.show = function() {
-    this.each(function(s) {
+    this.raw().each(function(s) {
       if (window.getComputedStyle(s).display === 'none') {
         if (s.originalDisplay) {
           s.style.display = s.originalDisplay;
@@ -467,13 +505,13 @@
   Set.prototype.manageListener = function(type, fn, capture, listenerType) {
     capture = typeof capture === CONS.UNDEFINED ? false : capture;
     if (type in this.vendorEvents) {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         for (var k in this.vendorEvents[type]) {
           s[listenerType + 'EventListener'](k, fn, capture);
         }
       }, this);
     } else {
-      this.each(function(s) {
+      this.raw().each(function(s) {
         s[listenerType + 'EventListener'](type, fn, capture);
       });
     }
@@ -520,7 +558,7 @@
         this.removeEventListener(k, transitionEnd, false);
       }
     };
-    this.each(function(s) {
+    this.raw().each(function(s) {
       for (var k in events) {
         s.addEventListener(k, transitionEnd, false);
       }

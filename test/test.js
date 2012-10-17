@@ -119,7 +119,7 @@
 
   runner.test('Should find parent nodes', function() {
     var results = $('p').parent();
-    return results.length === 4 && results.filter(function(item) { return item.nodeName === 'ARTICLE'; }).length === 3;
+    return results.length === 4 && results.raw().filter(function(item) { return item.nodeName === 'ARTICLE'; }).length === 3;
   });
 
   runner.test('Should find parent node with selector', function() {
@@ -129,12 +129,12 @@
 
   runner.test('Should find multiple parent nodes with selector', function() {
     var results = $('p span').parent('article');
-    return results.length === 2 && results.filter(function(item) { return item.nodeName === 'ARTICLE'; }).length === 2;
+    return results.length === 2 && results.raw().filter(function(item) { return item.nodeName === 'ARTICLE'; }).length === 2;
   });
 
   runner.test('Should return raw DOM elements', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'));
-    var results = $('#container article').raw();
+    var results = $('#container article').raw().get();
     return (!(results instanceof $.Set)) && results.filter(function(item, i) {
       return item.getAttribute('id') === expected[i].getAttribute('id');
     }).length === 3;
@@ -142,7 +142,7 @@
 
   runner.test('Should return one raw DOM element if no index passed', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container #article-1'));
-    var results = $('#container #article-1').raw();
+    var results = $('#container #article-1').raw().get();
     return (!(results instanceof $.Set)) && results.filter(function(item, i) {
       return item.getAttribute('id') === expected[i].getAttribute('id');
     }).length === 1;
@@ -150,14 +150,14 @@
 
   runner.test('Should return one raw DOM element if index passed', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'));
-    var results = $('#container article').raw(0);
+    var results = $('#container article').raw().get(0);
     return (results instanceof HTMLElement) && results.getAttribute('id') === expected[0].getAttribute('id');
   });
 
   runner.test('Should return new Set using get', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'), 0, 1);
     var results = $('#container article').get(0);
-    return ((results instanceof $.Set)) && results.filter(function(item, i) {
+    return ((results instanceof $.Set)) && results.raw().filter(function(item, i) {
       return item.getAttribute('id') === expected[i].getAttribute('id');
     }).length === 1;
   });
@@ -165,7 +165,7 @@
   runner.test('Should return entire Set using get', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'));
     var results = $('#container article').get();
-    return ((results instanceof $.Set)) && results.filter(function(item, i) {
+    return ((results instanceof $.Set)) && results.raw().filter(function(item, i) {
       return item.getAttribute('id') === expected[i].getAttribute('id');
     }).length === 3;
   });
@@ -229,10 +229,10 @@
       (items.remove() && $('#container article h3').length === 0);
   });
 
-  runner.test('Should iterate over nodes', function() {
+  runner.test('Should iterate over raw nodes', function() {
     var out = [],
       expected = ['Headline 1','Headline 2','Headline 3'];
-    $('#container article h3').each(function(h) {
+    $('#container article h3').raw().each(function(h) {
       out.push(h.textContent);
     });
     return out.filter(function(o, i) {
@@ -240,26 +240,48 @@
     }).length === 3;
   });
 
+  runner.test('Should iterate over nodes', function() {
+    var out = [],
+      expected = ['Headline 1','Headline 2','Headline 3'];
+    $('#container article h3').each(function(h) {
+      out.push(h.text());
+    });
+    return out.filter(function(o, i) {
+      return expected[i] === o;
+    }).length === 3;
+  });
+
   runner.test('Should filter nodes', function() {
-    return $('#container article h3').filter(function(h) {
+    return $('#container article h3').raw().filter(function(h) {
       return h.dataset.id === 'two';
     }).length === 1;
   });
 
   runner.test('Should map function and return new Set', function() {
-    var results = $('#container article h3').map(function(h) {
+    var results = $('#container article h3').raw().map(function(h) {
       h.innerHTML += ' yeah';
       return h;
     });
     return (results instanceof $.Set) && results.length === 3 &&
-      results.filter(function(item) {
+      results.raw().filter(function(item) {
+        return item.innerHTML.match(/ yeah$/);
+      }).length === 3;
+  });
+
+  runner.test('Should map function on raw and return new Set', function() {
+    var results = $('#container article h3').map(function(h) {
+      h.append(' yeah');
+      return h;
+    });
+    return (results instanceof $.Set) && results.length === 3 &&
+      results.raw().filter(function(item) {
         return item.innerHTML.match(/ yeah$/);
       }).length === 3;
   });
 
   runner.test('Should set basic css styles', function() {
     return $('#container article h3').style({color: '#F00', borderBottom: '2px solid #CCC'})
-    .filter(function(h) {
+    .raw().filter(function(h) {
       return (h.style.color === 'rgb(255, 0, 0)' || h.style.color === '#F00')
             && (h.style.borderBottom === '2px solid rgb(204, 204, 204)' || h.style.borderBottom === '2px solid #CCC');
     }).length === 3;
@@ -279,7 +301,7 @@
   runner.test('Should not add vendor prefixes to css declarations', function() {
     var results = $('#container article h3');
     results.style({ color: '#FFF' });
-    return results.filter(function(item) {
+    return results.raw().filter(function(item) {
       return (typeof item.style.MozColor === 'undefined') &&
         (typeof item.style.webkitColor === 'undefined') &&
         (typeof item.style.OColor === 'undefined') &&
@@ -291,7 +313,7 @@
   runner.test('Should add vendor prefixes to css declarations', function() {
     var results = $('#container article h3');
     results.style({ transform: 'scale(1.5)' });
-    return results.filter(function(item) {
+    return results.raw().filter(function(item) {
       return item.style.MozTransform === 'scale(1.5)' &&
         item.style.webkitTransform === 'scale(1.5)' &&
         item.style.OTransform === 'scale(1.5)' &&
@@ -302,7 +324,7 @@
 
   runner.test('Should hide elements', function() {
     var results = $('#container article h3').hide();
-    return results.filter(function(h) {
+    return results.raw().filter(function(h) {
       return window.getComputedStyle(h).display === 'none';
     }).length === 3;
   });
@@ -410,10 +432,10 @@
 
   runner.test('Should set DOM attribute', function() {
     var titles = ['a', 'b', 'c'];
-    $('#container article').each(function(s, i) {
+    $('#container article').raw().each(function(s, i) {
       $(s).attr('title', titles[i]);
     });
-    return $('#container article').filter(function(a, i) {
+    return $('#container article').raw().filter(function(a, i) {
       return $(a).attr('title') === titles[i];
     }).length === 3;
   });
@@ -421,7 +443,7 @@
   runner.test('Should set DOM attributes on multiple elements', function() {
     return $('#container article[title="new-title"]').length === 0 &&
       $('#container article').attr('title', 'new-title') &&
-      $('#container article').filter(function(a, i) {
+      $('#container article').raw().filter(function(a, i) {
         return $(a).attr('title') === 'new-title';
       }).length === 3;
   });
@@ -440,10 +462,10 @@
 
   runner.test('Should set data', function() {
     var titles = ['a', 'b', 'c'];
-    $('#container article').each(function(s, i) {
+    $('#container article').raw().each(function(s, i) {
       $(s).data('title', titles[i]);
     });
-    return $('#container article').filter(function(a, i) {
+    return $('#container article').raw().filter(function(a, i) {
       return $(a).data('title') === titles[i];
     }).length === 3;
   });
@@ -451,7 +473,7 @@
   runner.test('Should set data on multiple elements', function() {
     return $('#container article[data-title=new-title]').length === 0 &&
       $('#container article').data('title', 'new-title') &&
-      $('#container article').filter(function(a, i) {
+      $('#container article').raw().filter(function(a, i) {
         return $(a).data('title') === 'new-title';
       }).length === 3;
   });
@@ -525,7 +547,7 @@
 
     var e = document.createEvent('MouseEvents');
     e.initEvent('click', true, true);
-    $('#article-1 h3').raw(0).dispatchEvent(e);
+    $('#article-1 h3').raw().get(0).dispatchEvent(e);
     return passed;
   });
 
@@ -539,12 +561,12 @@
     var e = document.createEvent('MouseEvents');
     e.initEvent('click', true, true);
     $('#article-1 h3').addListener('click', setTrue);
-    $('#article-1 h3').raw(0).dispatchEvent(e);
+    $('#article-1 h3').raw().get(0).dispatchEvent(e);
 
     if (bool) {
       bool = false;
       $('#article-1 h3').removeListener('click', setTrue);
-      $('#article-1 h3').raw(0).dispatchEvent(e);
+      $('#article-1 h3').raw().get(0).dispatchEvent(e);
       return bool === false;
     } else {
       return false;
@@ -631,7 +653,7 @@
     $.shim('each', function(fn, ctx) {
       return 'shimmed';
     });
-    var shimmedResults = $('#container article').each(function(item) {
+    var shimmedResults = $('#container article').raw().each(function(item) {
       console.log(item);
     });
 

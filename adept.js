@@ -6,6 +6,10 @@
   CONS.FUNCTION = 'function';
   CONS.CLASS_LIST = 'classList';
 
+  function firstOrList(results) {
+    return results.length === 1 ? results[0] : results;
+  }
+
   var CanvasContext = (function() {
 
     var canvas = document.createElement('canvas');
@@ -72,7 +76,7 @@
         }
         return out;
       }, this);
-      return results.length === 1 ? results[0] : results;
+      return firstOrList(results);
     };
 
     CanvasContext.prototype.raw = function(i) {
@@ -84,7 +88,7 @@
       var results = this.list.map(function(c) {
         return c.toDataURL.call(c, args);
       });
-      return results.length === 1 ? results[0] : results;
+      return firstOrList(results);
     };
 
     CanvasContext.prototype.toBlob = function() {
@@ -92,7 +96,7 @@
       var results = this.list.map(function(c) {
         return c.toBlob.call(c, args);
       });
-      return results.length === 1 ? results[0] : results;
+      return firstOrList(results);
     };
 
     return CanvasContext;
@@ -172,7 +176,7 @@
       var results = this.list.map(function(s) {
         return s.getAttribute(name);
       });
-      return results.length === 1 ? results[0] : results;
+      return firstOrList(results);
     } else if (name && val) {
       this.each(function(s) {
         s.setAttribute(name, val);
@@ -186,7 +190,7 @@
       var results = this.list.map(function(s) {
         return s.dataset[name];
       });
-      return results.length === 1 ? results[0] : results;
+      return firstOrList(results);
     } else if (name && val) {
       this.each(function(s) {
         s.dataset[name] = val;
@@ -199,7 +203,7 @@
         }
         return out;
       });
-      return (results.length === 1 ? results[0] : results);
+      return firstOrList(results);
     }
     return this;
   };
@@ -217,7 +221,7 @@
       var results = this.list.map(function(s) {
         return s.value;
       });
-      return results.length === 1 ? results[0] : results;
+      return firstOrList(results);
     }
   };
 
@@ -229,7 +233,7 @@
       var out = this.list.map(function(s) {
         return s[type];
       });
-      return out.length === 1 ? out[0] : out;
+      return firstOrList(out);
     } else {
       this.each(function(s) {
         s[type] = content;
@@ -247,7 +251,12 @@
   };
 
   Set.prototype.prepend = function(content) {
-    if (content instanceof HTMLElement) {
+    if (content instanceof Set) {
+      var c = content.content(undefined, 'outerHTML');
+      this.each(function(s) {
+        s.innerHTML = c + s.innerHTML;
+      });
+    } else if (content instanceof HTMLElement) {
       this.each(function(s) {
         var c = content.cloneNode(true);
         s.parentNode.insertBefore(s.parentNode.childNodes[0], c);
@@ -261,7 +270,11 @@
   };
 
   Set.prototype.append = function(content) {
-    if (content instanceof HTMLElement) {
+    if (content instanceof Set) {
+      this.each(function(s) {
+        s.innerHTML += content.content(undefined, 'outerHTML');
+      });
+    } else if (content instanceof HTMLElement) {
       this.each(function(s) {
         s.appendChild(content.cloneNode(true));
       });
@@ -382,14 +395,14 @@
     var results = this.list.map(function(s) {
       return s.offsetWidth;
     });
-    return results.length === 1 ? results[0] : results;
+    return firstOrList(results);
   };
 
   Set.prototype.height = function() {
     var results = this.list.map(function(s) {
       return s.offsetHeight;
     });
-    return results.length === 1 ? results[0] : results;
+    return firstOrList(results);
   };
 
   /**
@@ -528,6 +541,12 @@
     }
   }
 
+  function fragment(str) {
+    var parent = document.createElement('div');
+    parent.innerHTML = str;
+    return new Set([parent]);
+  }
+
   function $(selector, root) {
     if (selector instanceof Set) {
       return selector;
@@ -547,6 +566,8 @@
     root = root || document;
     return new Set(root.querySelectorAll(selector));
   }
+
+  $['fragment'] = fragment;
 
   /**
    * Export all functions needed for public API
@@ -568,7 +589,7 @@
   $['Set'].prototype['append'] = Set.prototype.append;
   $['Set'].prototype['remove'] = Set.prototype.remove;
   $['Set'].prototype['style'] = Set.prototype.style;
-  $['Set'].prototype['css'] = Set.prototype.style;
+  $['Set'].prototype['css'] = Set.prototype.style; // jQuery-like
   $['Set'].prototype['hide'] = Set.prototype.hide;
   $['Set'].prototype['show'] = Set.prototype.show;
   $['Set'].prototype['width'] = Set.prototype.width;
@@ -580,8 +601,8 @@
   $['Set'].prototype['replaceClass'] = Set.prototype.replaceClass;
   $['Set'].prototype['addListener'] = Set.prototype.addListener;
   $['Set'].prototype['removeListener'] = Set.prototype.removeListener;
-  $['Set'].prototype['on'] = Set.prototype.addListener;
-  $['Set'].prototype['off'] = Set.prototype.removeListener;
+  $['Set'].prototype['on'] = Set.prototype.addListener; // jQuery-like
+  $['Set'].prototype['off'] = Set.prototype.removeListener; // jQuery-like
   $['Set'].prototype['transition'] = Set.prototype.transition;
   $['Set'].prototype['context'] = Set.prototype.context;
 

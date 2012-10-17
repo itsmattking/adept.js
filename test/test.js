@@ -62,6 +62,16 @@
     }).length === 3;
   });
 
+  runner.test('Should create Set from fragment', function() {
+     var fragment = $.fragment('<div class="test"></div>');
+     return fragment.find('.test').length === 1;
+  });
+
+  runner.test('Should create Set from fragment', function() {
+     var fragment = $.fragment('<div class="test"></div>');
+     return fragment.find('.test').length === 1;
+  });
+
   runner.test('Should find h3 Tags with one selector', function() {
     return $('#container article h3').length === 3;
   });
@@ -179,6 +189,38 @@
     return $('#container article h3').list.filter(function(h, i) {
       return expected[i] === h.textContent;
     }).length === 3;
+  });
+
+  runner.test('Should prepend content from fragment', function() {
+    var notExist = $('#container article:nth-of-type(1) div.test').length === 0;
+    var fragment = $.fragment('<div class="test"></div>');
+    $('#container article:nth-of-type(1)').append(fragment);
+    return notExist && $('#container article div.test').length === 1;
+  });
+
+  runner.test('Should prepend content from another Set', function() {
+    var notExist = $('#container article:nth-of-type(2) article:first-child').length === 0;
+    var other = $('#container article:nth-of-type(1)');
+    $('#container article:nth-of-type(2)').prepend(other);
+    return notExist &&
+      $('#container article:nth-of-type(2) article:first-child').length === 1 &&
+      $('#container article:nth-of-type(2) article:last-child').length === 0;
+  });
+
+  runner.test('Should append content from fragment', function() {
+    var notExist = $('#container article:nth-of-type(1) div.test');
+    var fragment = $.fragment('<div class="test"></div>');
+    $('#container article:nth-of-type(1)').append(fragment);
+    return notExist &&
+      $('#container article div.test').length === 1;
+  });
+
+  runner.test('Should append content from another Set', function() {
+    var notExist = $('#container article article').length === 0;
+    var other = $('#container article:nth-of-type(1)');
+    $('#container article:nth-of-type(2)').append(other);
+    return notExist &&
+      $('#container article article').length === 1;
   });
 
   runner.test('Should remove nodes', function() {

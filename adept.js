@@ -1,9 +1,15 @@
 (function(document, window) {
 
+  var CONS = {};
+
+  CONS.UNDEFINED = 'undefined';
+  CONS.FUNCTION = 'function';
+  CONS.CLASS_LIST = 'classList';
+
   var CanvasContext = (function() {
 
     var canvas = document.createElement('canvas');
-    if (!canvas || typeof canvas.getContext !== 'function') {
+    if (!canvas || typeof canvas.getContext !== CONS.FUNCTION) {
       return null;
     }
 
@@ -13,7 +19,7 @@
      */
     function CanvasContext(list) {
       this.list = list.map(function(l) {
-        if (typeof l.getContext === 'function') {
+        if (typeof l.getContext === CONS.FUNCTION) {
           l.ctx = l.getContext('2d');
           return l;
         } else {
@@ -27,7 +33,7 @@
     var ctx = canvas.getContext('2d');
 
     for (var k in ctx) {
-      if (!(k in CanvasContext.prototype) && typeof ctx[k] === 'function') {
+      if (!(k in CanvasContext.prototype) && typeof ctx[k] === CONS.FUNCTION) {
         (function(fn) {
           CanvasContext.prototype[fn] = function() {
             var args = Set.prototype.slice.call(arguments, 0);
@@ -58,7 +64,7 @@
     };
 
     CanvasContext.prototype.settings = function(i) {
-      var list = (typeof i === 'undefined' ? this.list : [this.list[i]]);
+      var list = (typeof i === CONS.UNDEFINED ? this.list : [this.list[i]]);
       var results = list.map(function(l) {
         var out = {};
         for (var k in this.validSetters) {
@@ -146,6 +152,14 @@
     }
   };
 
+  Set.prototype.get = function(i) {
+    if (typeof i !== CONS.UNDEFINED) {
+      return new Set([this.list[i]]);
+    } else {
+      return this;
+    }
+  };
+
   Set.prototype.raw = function(i) {
     return this.list[i] || this.list;
   };
@@ -154,7 +168,7 @@
    * DOM Attributes and Data
    */
   Set.prototype.attr = function(name, val) {
-    if (name && typeof val === 'undefined') {
+    if (name && typeof val === CONS.UNDEFINED) {
       var results = this.list.map(function(s) {
         return s.getAttribute(name);
       });
@@ -168,7 +182,7 @@
   };
 
   Set.prototype.data = function(name, val) {
-    if (name && typeof val === 'undefined') {
+    if (name && typeof val === CONS.UNDEFINED) {
       var results = this.list.map(function(s) {
         return s.dataset[name];
       });
@@ -211,7 +225,7 @@
    * DOM modification
    */
   Set.prototype.content = function(content, type) {
-    if (typeof content === 'undefined') {
+    if (typeof content === CONS.UNDEFINED) {
       var out = this.list.map(function(s) {
         return s[type];
       });
@@ -347,21 +361,35 @@
   };
 
   Set.prototype.modifyClass = function(className, type) {
-    if (typeof className !== 'undefined') {
+    if (typeof className !== CONS.UNDEFINED) {
       className = className.split(' ');
       this.list.map(function(s) {
         className.map(function(name) {
-          s['classList'][type](name);
+          s[CONS.CLASS_LIST][type](name);
         });
       });
     } else if (type === 'remove') {
       this.list.map(function(s) {
-        while(s['classList'].length) {
-          s['classList'].remove(s['classList'][0]);
+        while(s[CONS.CLASS_LIST].length) {
+          s[CONS.CLASS_LIST].remove(s[CONS.CLASS_LIST][0]);
         }
       });
     }
     return this;
+  };
+
+  Set.prototype.width = function() {
+    var results = this.list.map(function(s) {
+      return s.offsetWidth;
+    });
+    return results.length === 1 ? results[0] : results;
+  };
+
+  Set.prototype.height = function() {
+    var results = this.list.map(function(s) {
+      return s.offsetHeight;
+    });
+    return results.length === 1 ? results[0] : results;
   };
 
   /**
@@ -401,6 +429,16 @@
     return this.addClass(className);
   };
 
+  /**
+   * Check if a class is attached to an element.
+   * @param {String} [className] the class name.
+   */
+  Set.prototype.hasClass = function(className) {
+    return this.list.filter(function(s) {
+      return s[CONS.CLASS_LIST].contains(className);
+    }).length > 0;
+  };
+
   Set.prototype.vendorEvents = {
     'transitionEnd': {
       'oTransitionEnd': 1,
@@ -414,7 +452,7 @@
    */
 
   Set.prototype.manageListener = function(type, fn, capture, listenerType) {
-    capture = typeof capture === 'undefined' ? false : capture;
+    capture = typeof capture === CONS.UNDEFINED ? false : capture;
     if (type in this.vendorEvents) {
       this.each(function(s) {
         for (var k in this.vendorEvents[type]) {
@@ -502,7 +540,7 @@
       return new Set([selector]);
     }
     if (selector instanceof window['Object'] &&
-        typeof selector.length !== 'undefined') {
+        typeof selector.length !== CONS.UNDEFINED) {
       return new Set(Set.prototype.slice.call(selector, 0));
     }
 
@@ -519,6 +557,7 @@
   $['Set'].prototype['filter'] = Set.prototype.filter;
   $['Set'].prototype['map'] = Set.prototype.map;
   $['Set'].prototype['parent'] = Set.prototype.parent;
+  $['Set'].prototype['get'] = Set.prototype.get;
   $['Set'].prototype['raw'] = Set.prototype.raw;
   $['Set'].prototype['attr'] = Set.prototype.attr;
   $['Set'].prototype['data'] = Set.prototype.data;
@@ -529,14 +568,20 @@
   $['Set'].prototype['append'] = Set.prototype.append;
   $['Set'].prototype['remove'] = Set.prototype.remove;
   $['Set'].prototype['style'] = Set.prototype.style;
+  $['Set'].prototype['css'] = Set.prototype.style;
   $['Set'].prototype['hide'] = Set.prototype.hide;
   $['Set'].prototype['show'] = Set.prototype.show;
+  $['Set'].prototype['width'] = Set.prototype.width;
+  $['Set'].prototype['height'] = Set.prototype.height;
   $['Set'].prototype['addClass'] = Set.prototype.addClass;
   $['Set'].prototype['removeClass'] = Set.prototype.removeClass;
   $['Set'].prototype['toggleClass'] = Set.prototype.toggleClass;
+  $['Set'].prototype['hasClass'] = Set.prototype.hasClass;
   $['Set'].prototype['replaceClass'] = Set.prototype.replaceClass;
   $['Set'].prototype['addListener'] = Set.prototype.addListener;
   $['Set'].prototype['removeListener'] = Set.prototype.removeListener;
+  $['Set'].prototype['on'] = Set.prototype.addListener;
+  $['Set'].prototype['off'] = Set.prototype.removeListener;
   $['Set'].prototype['transition'] = Set.prototype.transition;
   $['Set'].prototype['context'] = Set.prototype.context;
 

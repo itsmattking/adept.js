@@ -144,6 +144,22 @@
     return (results instanceof HTMLElement) && results.getAttribute('id') === expected[0].getAttribute('id');
   });
 
+  runner.test('Should return new Set using get', function() {
+    var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'), 0, 1);
+    var results = $('#container article').get(0);
+    return ((results instanceof $.Set)) && results.filter(function(item, i) {
+      return item.getAttribute('id') === expected[i].getAttribute('id');
+    }).length === 1;
+  });
+
+  runner.test('Should return entire Set using get', function() {
+    var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'));
+    var results = $('#container article').get();
+    return ((results instanceof $.Set)) && results.filter(function(item, i) {
+      return item.getAttribute('id') === expected[i].getAttribute('id');
+    }).length === 3;
+  });
+
   runner.test('Should set text content', function() {
     var item = $('#container #article-2 h3');
     return item.text('New text Content') &&
@@ -264,6 +280,15 @@
     var span = $('#container #article-2 p span').list[0];
     return window.getComputedStyle(span).display === 'inline-block' &&
       window.getComputedStyle($(span).show().list[0]).display === 'inline-block';
+  });
+
+  runner.test('Should detect elements not having a class', function() {
+    return !$('#container article').hasClass('new-class');
+  });
+
+  runner.test('Should detect elements having a class', function() {
+    $('#container article').addClass('new-class');
+    return $('#container article').hasClass('new-class');
   });
 
   runner.test('Should add class to elements', function() {

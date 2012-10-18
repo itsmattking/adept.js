@@ -135,7 +135,7 @@
   runner.test('Should return raw DOM elements', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container article'));
     var results = $('#container article').raw().get();
-    return (!(results instanceof $.Set)) && results.filter(function(item, i) {
+    return (results instanceof $.RawSet) && results.filter(function(item, i) {
       return item.getAttribute('id') === expected[i].getAttribute('id');
     }).length === 3;
   });
@@ -143,7 +143,7 @@
   runner.test('Should return one raw DOM element if no index passed', function() {
     var expected = Array.prototype.slice.call(document.querySelectorAll('#container #article-1'));
     var results = $('#container #article-1').raw().get();
-    return (!(results instanceof $.Set)) && results.filter(function(item, i) {
+    return (results instanceof $.RawSet) && results.filter(function(item, i) {
       return item.getAttribute('id') === expected[i].getAttribute('id');
     }).length === 1;
   });
@@ -245,6 +245,17 @@
       expected = ['Headline 1','Headline 2','Headline 3'];
     $('#container article h3').each(function(h) {
       out.push(h.text());
+    });
+    return out.filter(function(o, i) {
+      return expected[i] === o;
+    }).length === 3;
+  });
+
+  runner.test('Each should apply item as Set', function() {
+    var out = [],
+      expected = [true, true, true];
+    $('#container article h3').each(function(h) {
+      out.push(h instanceof $.Set);
     });
     return out.filter(function(o, i) {
       return expected[i] === o;

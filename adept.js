@@ -105,13 +105,15 @@
 
   /**
    * @constructor
+   * @param {Object} [list] the list to start from.
    */
   function Set(list) {
-    this.list = this.slice.call(list, 0);
-    this.length = this.list.length;
-    this.returnRaw = false;
-    this.fn = undefined;
-    this.ctx = undefined;
+    if (list) {
+      this.list = this.slice.call(list, 0);
+      this.length = this.list.length;
+      this.fn = undefined;
+      this.ctx = undefined;
+    }
     return this;
   }
 
@@ -124,28 +126,25 @@
    */
   Set.prototype.each = function(fn, ctx) {
     ctx = ctx || fn;
-    if (this.returnRaw) {
-      this.list.forEach(fn, ctx);
-    } else {
-      this.fn = fn;
-      this.ctx = ctx;
-      this.list.forEach(this.applyItem, this);
-      this.fn = this.ctx = undefined;
-    }
+    this.fn = fn;
+    this.ctx = ctx;
+    this.list.forEach(this.applyItem, this);
+    this.fn = this.ctx = undefined;
     return this;
   };
 
+  /**
+   * Filter Set collection
+   * @param {Function} fn the function to call on each iteration.
+   * @param {Object} [ctx] context to pass to filter.
+   */
   Set.prototype.filter = function(fn, ctx) {
     ctx = ctx || fn;
-    if (this.returnRaw) {
-      return new Set(this.list.filter(fn, ctx));
-    } else {
-      this.fn = fn;
-      this.ctx = ctx;
-      var out = new Set(this.list.filter(this.applyItem, this));
-      this.fn = this.ctx = undefined;
-      return out;
-    }
+    this.fn = fn;
+    this.ctx = ctx;
+    var out = new Set(this.list.filter(this.applyItem, this));
+    this.fn = this.ctx = undefined;
+    return out;
   };
 
   Set.prototype.find = function(selector) {
@@ -154,16 +153,17 @@
     }, this).reduce(function(a, b) { return a.concat(b); }));
   };
 
+  /**
+   * Map over Set collection
+   * @param {Function} fn the function to call on each iteration.
+   * @param {Object} [ctx] context to pass to filter.
+   */
   Set.prototype.map = function(fn, ctx) {
     ctx = ctx || fn;
-    if (this.returnRaw) {
-      this.list.map(fn, ctx);
-    } else {
-      this.fn = fn;
-      this.ctx = ctx;
-      this.list.map(this.applyItem, this);
-      this.fn = this.ctx = undefined;
-    }
+    this.fn = fn;
+    this.ctx = ctx;
+    this.list.map(this.applyItem, this);
+    this.fn = this.ctx = undefined;
     return this;
   };
 
@@ -188,22 +188,15 @@
   };
 
   Set.prototype.get = function(i) {
-    if (typeof i !== CONS.UNDEFINED) {
-      if (this.returnRaw) {
-        return this.list[i];
-      } else {
-        return new Set([this.list[i]]);
-      }
-    } else if (this.returnRaw) {
-      return this.list;
-    } else {
+    if (typeof i === CONS.UNDEFINED) {
       return this;
+    } else {
+      return new Set([this.list[i]]);
     }
   };
 
   Set.prototype.raw = function() {
-    this.returnRaw = true;
-    return this;
+    return new RawSet(this.list);
   };
 
   /**
@@ -216,7 +209,7 @@
       });
       return firstOrList(results);
     } else if (name && val) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.setAttribute(name, val);
       });
     }
@@ -230,7 +223,7 @@
       });
       return firstOrList(results);
     } else if (name && val) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.dataset[name] = val;
       });
     } else if (!(name && val)) {
@@ -251,7 +244,7 @@
    */
   Set.prototype.val = function(val) {
     if (val) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.value = val;
       });
       return this;
@@ -273,7 +266,7 @@
       });
       return firstOrList(out);
     } else {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s[type] = content;
       });
     }
@@ -291,16 +284,16 @@
   Set.prototype.prepend = function(content) {
     if (content instanceof Set) {
       var c = content.content(undefined, 'outerHTML');
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.innerHTML = c + s.innerHTML;
       });
     } else if (content instanceof HTMLElement) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         var c = content.cloneNode(true);
         s.parentNode.insertBefore(s.parentNode.childNodes[0], c);
       });
     } else {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.innerHTML = content + s.innerHTML;
       });
     }
@@ -309,15 +302,15 @@
 
   Set.prototype.append = function(content) {
     if (content instanceof Set) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.innerHTML += content.content(undefined, 'outerHTML');
       });
     } else if (content instanceof HTMLElement) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.appendChild(content.cloneNode(true));
       });
     } else {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s.innerHTML += content;
       });
     }
@@ -325,7 +318,7 @@
   };
 
   Set.prototype.remove = function() {
-    this.raw().each(function(s) {
+    this.list.forEach(function(s) {
       s.parentNode.removeChild(s);
     });
     return this;
@@ -377,7 +370,7 @@
     if (typeof dec === 'string') {
       return window.getComputedStyle(this.list[0])[dec];
     } else {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         for (var k in dec) {
           this.setStyle(s, k, dec[k]);
         }
@@ -387,7 +380,7 @@
   };
 
   Set.prototype.hide = function() {
-    this.raw().each(function(s) {
+    this.list.forEach(function(s) {
       var originalDisplay = window.getComputedStyle(s).display;
       if (originalDisplay !== 'none') {
         s.originalDisplay = originalDisplay;
@@ -398,7 +391,7 @@
   };
 
   Set.prototype.show = function() {
-    this.raw().each(function(s) {
+    this.list.forEach(function(s) {
       if (window.getComputedStyle(s).display === 'none') {
         if (s.originalDisplay) {
           s.style.display = s.originalDisplay;
@@ -505,13 +498,13 @@
   Set.prototype.manageListener = function(type, fn, capture, listenerType) {
     capture = typeof capture === CONS.UNDEFINED ? false : capture;
     if (type in this.vendorEvents) {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         for (var k in this.vendorEvents[type]) {
           s[listenerType + 'EventListener'](k, fn, capture);
         }
       }, this);
     } else {
-      this.raw().each(function(s) {
+      this.list.forEach(function(s) {
         s[listenerType + 'EventListener'](type, fn, capture);
       });
     }
@@ -558,7 +551,7 @@
         this.removeEventListener(k, transitionEnd, false);
       }
     };
-    this.raw().each(function(s) {
+    this.list.forEach(function(s) {
       for (var k in events) {
         s.addEventListener(k, transitionEnd, false);
       }
@@ -572,10 +565,67 @@
     return new CanvasContext(this.list);
   };
 
+  /**
+   * @constructor
+   * @param {Object} [list] the list to start from.
+   */
+  function RawSet(list) {
+    if (list) {
+      this.list = this.slice.call(list, 0);
+      this.length = this.list.length;
+    }
+    return this;
+  }
+
+  RawSet.prototype = new Set();
+
+  /**
+   * Filter RawSet collection
+   * @param {Function} fn the function to call on each iteration.
+   * @param {Object} [ctx] context to pass to filter.
+   */
+  RawSet.prototype.filter = function(fn, ctx) {
+    return new RawSet(this.list.filter(fn, ctx));
+  };
+
+  /**
+   * Iterate over the RawSet collection
+   * @param {Function} fn the function to call on each iteration.
+   * @param {Object} [ctx] context to pass to forEach.
+   */
+  RawSet.prototype.each = function(fn, ctx) {
+    ctx = ctx || fn;
+    this.list.forEach(fn, ctx);
+    return this;
+  };
+
+  /**
+   * Map over RawSet collection
+   * @param {Function} fn the function to call on each iteration.
+   * @param {Object} [ctx] context to pass to filter.
+   */
+  RawSet.prototype.map = function(fn, ctx) {
+    ctx = ctx || fn;
+    this.list.map(fn, ctx);
+    return this;
+  };
+
+  RawSet.prototype.get = function(i) {
+    if (typeof i === CONS.UNDEFINED) {
+      return this;
+    } else {
+      return this.list[i];
+    }
+  };
+
   function shim(name, fn) {
     if (name in Set.prototype) {
       Set.prototype[name] = fn;
       $['Set'].prototype[name] = Set.prototype[name];
+    }
+    if (name in RawSet.prototype) {
+      RawSet.prototype[name] = fn;
+      $['RawSet'].prototype[name] = RawSet.prototype[name];
     }
   }
 
@@ -643,6 +693,12 @@
   $['Set'].prototype['off'] = Set.prototype.removeListener; // jQuery-like
   $['Set'].prototype['transition'] = Set.prototype.transition;
   $['Set'].prototype['context'] = Set.prototype.context;
+
+  $['RawSet'] = RawSet;
+  $['RawSet'].prototype['each'] = RawSet.prototype.each;
+  $['RawSet'].prototype['filter'] = RawSet.prototype.filter;
+  $['RawSet'].prototype['map'] = RawSet.prototype.map;
+  $['RawSet'].prototype['get'] = RawSet.prototype.get;
 
   $['CanvasContext'] = CanvasContext;
   $['CanvasContext'].prototype['set'] = CanvasContext.prototype.set;
